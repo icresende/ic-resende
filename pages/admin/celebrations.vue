@@ -1,17 +1,15 @@
 <template>
   <div class="page page--wide">
-    <div class="toolbar">
-      <NuxtLink to="/admin" class="btn btn--ghost">← Voltar</NuxtLink>
-    </div>
-    <h1>Celebrações</h1>
+    <AdminTabs />
+    <h1>Relatórios</h1>
 
     <div v-if="errorMsg" class="alert alert--error">{{ errorMsg }}</div>
     <div v-if="successMsg" class="alert alert--success">{{ successMsg }}</div>
 
     <div class="card">
-      <h2>{{ editingId ? "Editar celebração" : "Nova celebração" }}</h2>
+      <h2>{{ editingId ? "Editar relatório" : "Novo relatório" }}</h2>
       <div class="field">
-        <label><input v-model="form.is_recurring" type="checkbox" style="width:auto;margin-right:6px;" />Celebração recorrente (o sistema cria a data automaticamente toda semana)</label>
+        <label><input v-model="form.is_recurring" type="checkbox" style="width:auto;margin-right:6px;" />Relatório recorrente (o sistema cria a data automaticamente toda semana)</label>
       </div>
 
       <div class="grid-2" v-if="form.is_recurring">
@@ -60,7 +58,7 @@
         <label><input v-model="form.ask_contact" type="checkbox" style="width:auto;margin-right:6px;" />Pedir nome e whatsapp de quem preenche</label>
       </div>
       <div class="field">
-        <label>Cor (para diferenciar quando houver várias celebrações)</label>
+        <label>Cor (para diferenciar quando houver vários relatórios)</label>
         <input v-model="form.color" type="color" style="width:70px;height:38px;padding:2px;" />
       </div>
 
@@ -83,7 +81,7 @@
       </div>
 
       <button class="btn btn--primary" :disabled="saving" @click="save">
-        {{ saving ? "Salvando..." : editingId ? "Salvar alterações" : "Criar celebração" }}
+        {{ saving ? "Salvando..." : editingId ? "Salvar alterações" : "Criar relatório" }}
       </button>
       <button v-if="editingId" class="btn btn--ghost" style="margin-left:8px;" @click="cancelEdit">Cancelar</button>
     </div>
@@ -105,21 +103,52 @@
       </div>
     </div>
 
-    <h2>Celebrações cadastradas</h2>
-    <div v-for="c in instances" :key="c.id" class="card" :style="{ borderLeft: `4px solid ${c.color || 'var(--line)'}` }">
-      <div class="list-item" style="border:none;padding:0;">
-        <div>
-          <strong>{{ c.label }}</strong>
-          <span v-if="c.template_id" class="badge badge--done" style="margin-left:8px;">Gerada automaticamente</span>
-          <span v-if="c.archived" class="badge badge--pending" style="margin-left:8px;">Arquivada</span>
-          <div class="muted">{{ formatDate(c.date) }} · {{ c.time?.slice(0,5) }} · {{ c.salon }}</div>
-        </div>
-        <div>
-          <button class="btn btn--ghost" @click="startEdit(c)">Editar</button>
-          <button class="btn btn--danger" @click="remove(c.id)">Excluir</button>
+    <h2>Próximos relatórios</h2>
+    <div v-if="!upcomingGroups.length" class="muted">Nenhum relatório futuro cadastrado.</div>
+    <details v-for="(g, idx) in upcomingGroups" :key="g.label" class="group" :open="idx === 0">
+      <summary>{{ g.label }} <span class="count">{{ g.items.length }}</span></summary>
+      <div class="group__body">
+        <div v-for="c in g.items" :key="c.id" class="card" :style="{ borderLeft: `4px solid ${c.color || 'var(--line)'}` }">
+          <div class="list-item" style="border:none;padding:0;">
+            <div>
+              <strong>{{ c.label }}</strong>
+              <span v-if="c.template_id" class="badge badge--done" style="margin-left:8px;">Gerado automaticamente</span>
+              <div class="muted">{{ formatDate(c.date) }} · {{ c.time?.slice(0,5) }} · {{ c.salon }}</div>
+            </div>
+            <div>
+              <button class="btn btn--ghost" @click="startEdit(c)">Editar</button>
+              <button class="btn btn--danger" @click="remove(c.id)">Excluir</button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </details>
+
+    <details class="group group--muted" style="margin-top:20px;">
+      <summary>Relatórios arquivados <span class="count">{{ archivedInstances.length }}</span></summary>
+      <div class="group__body">
+        <div v-if="!archivedGroups.length" class="muted">Nenhum relatório arquivado.</div>
+        <details v-for="g in archivedGroups" :key="g.label" class="group group--muted">
+          <summary>{{ g.label }} <span class="count">{{ g.items.length }}</span></summary>
+          <div class="group__body">
+            <div v-for="c in g.items" :key="c.id" class="card" :style="{ borderLeft: `4px solid ${c.color || 'var(--line)'}` }">
+              <div class="list-item" style="border:none;padding:0;">
+                <div>
+                  <strong>{{ c.label }}</strong>
+                  <span v-if="c.template_id" class="badge badge--done" style="margin-left:8px;">Gerado automaticamente</span>
+                  <span class="badge badge--pending" style="margin-left:8px;">Arquivado</span>
+                  <div class="muted">{{ formatDate(c.date) }} · {{ c.time?.slice(0,5) }} · {{ c.salon }}</div>
+                </div>
+                <div>
+                  <button class="btn btn--ghost" @click="startEdit(c)">Editar</button>
+                  <button class="btn btn--danger" @click="remove(c.id)">Excluir</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </details>
   </div>
 </template>
 
@@ -131,6 +160,12 @@ const supabase = useSupabaseClient();
 const celebrations = ref<any[]>([]);
 const templates = computed(() => celebrations.value.filter((c) => !c.date));
 const instances = computed(() => celebrations.value.filter((c) => c.date));
+const upcomingInstances = computed(() =>
+  instances.value.filter((c) => !c.archived).sort((a, b) => (a.date || "").localeCompare(b.date || ""))
+);
+const archivedInstances = computed(() =>
+  instances.value.filter((c) => c.archived).sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+);
 const allMinistries = ref<any[]>([]);
 const selectedMinistryIds = ref<string[]>([]);
 const doneMinistryIds = ref<string[]>([]);
@@ -144,6 +179,24 @@ const WEEKDAYS = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Q
 function weekdayName(w: number) {
   return WEEKDAYS[w] ?? "";
 }
+
+const MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+function monthLabel(d: string) {
+  if (!d) return "Sem data";
+  const [y, m] = d.split("-");
+  return `${MONTHS[parseInt(m, 10) - 1]} ${y}`;
+}
+function groupByMonth(list: any[]) {
+  const map = new Map<string, any[]>();
+  for (const c of list) {
+    const key = monthLabel(c.date);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(c);
+  }
+  return Array.from(map.entries()).map(([label, items]) => ({ label, items }));
+}
+const upcomingGroups = computed(() => groupByMonth(upcomingInstances.value));
+const archivedGroups = computed(() => groupByMonth(archivedInstances.value));
 
 const emptyForm = () => ({
   date: "",
@@ -244,22 +297,22 @@ async function save() {
     };
     if (editingId.value) {
       await call(`/celebrations/${editingId.value}`, { method: "PUT", token, body });
-      successMsg.value = "Celebração atualizada!";
+      successMsg.value = "Relatório atualizado!";
     } else {
       await call("/celebrations", { method: "POST", token, body });
-      successMsg.value = "Celebração criada!";
+      successMsg.value = "Relatório criado!";
     }
     cancelEdit();
     await load();
   } catch (e: any) {
-    errorMsg.value = "Erro ao salvar celebração.";
+    errorMsg.value = "Erro ao salvar relatório.";
   } finally {
     saving.value = false;
   }
 }
 
 async function remove(id: string) {
-  if (!confirm("Excluir esta celebração e todos os registros ligados a ela?")) return;
+  if (!confirm("Excluir este relatório e todos os registros ligados a ele?")) return;
   const token = await getToken();
   await call(`/celebrations/${id}`, { method: "DELETE", token });
   await load();

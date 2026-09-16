@@ -1,8 +1,6 @@
 <template>
   <div class="page page--wide">
-    <div class="toolbar">
-      <NuxtLink to="/admin" class="btn btn--ghost">← Voltar</NuxtLink>
-    </div>
+    <AdminTabs />
     <h1>Organograma</h1>
     <p class="muted">Clique num item para editar. Arraste um ministério para mudar de categoria.</p>
 

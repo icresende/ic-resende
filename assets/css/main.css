@@ -322,6 +322,14 @@ a { color: var(--green-700); }
   border-bottom-color: var(--green-500);
 }
 
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.admin-tabs .btn { padding: 9px 16px; font-size: 0.9rem; }
+
 .kanban {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -347,10 +355,94 @@ a { color: var(--green-700); }
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 12px;
+  padding: 10px 12px;
   margin-bottom: 10px;
   cursor: grab;
 }
+.kanban__card-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ---- grupos colapsáveis por mês ---- */
+.group {
+  margin-bottom: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+.group > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 10px 12px;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--green-900);
+  background: var(--green-100);
+  border-radius: 9px 9px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.group:not([open]) > summary { border-radius: 9px; }
+.group--muted > summary { background: #ececea; color: var(--ink-soft); }
+.group > summary::-webkit-details-marker { display: none; }
+.group > summary::after {
+  content: "▾";
+  transition: transform 0.15s ease;
+}
+.group:not([open]) > summary::after { transform: rotate(-90deg); }
+.group > summary .count {
+  font-weight: 400;
+  text-transform: none;
+  color: var(--ink-soft);
+  letter-spacing: 0;
+}
+.group__body { padding: 8px 10px; }
+.group .kanban__card,
+.group .card { margin: 6px 0; }
+
+/* ---- menu de ações compacto (kebab) ---- */
+.card-menu {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 1;
+}
+.card-menu[open] { z-index: 20; }
+.card-menu > summary {
+  cursor: pointer;
+  list-style: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 1.1rem;
+  color: var(--green-700);
+}
+.card-menu > summary::-webkit-details-marker { display: none; }
+.card-menu__list {
+  position: absolute;
+  right: 0;
+  top: 38px;
+  z-index: 5;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(11, 61, 58, 0.15);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+}
+.card-menu__list .btn { justify-content: flex-start; width: 100%; }
 
 .org-leadership {
   text-align: center;

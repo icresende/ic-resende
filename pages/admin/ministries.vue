@@ -1,8 +1,6 @@
 <template>
   <div class="page page--wide">
-    <div class="toolbar">
-      <NuxtLink to="/admin" class="btn btn--ghost">← Voltar</NuxtLink>
-    </div>
+    <AdminTabs />
     <h1>Ministérios</h1>
 
     <div v-if="errorMsg" class="alert alert--error">{{ errorMsg }}</div>
