@@ -1,16 +1,10 @@
 <template>
   <div class="page">
     <div class="toolbar">
-      <button v-if="step > 1" class="btn btn--ghost" @click="step = step - 1">← Voltar</button>
+      <button v-if="stage" class="btn btn--ghost" @click="backToChoice">← Voltar</button>
       <NuxtLink v-else to="/base" class="btn btn--ghost">← Voltar</NuxtLink>
     </div>
     <h1>Casa <em>Pastoral</em></h1>
-    <p>Relatório de atendimento. Preencha as duas etapas abaixo.</p>
-
-    <div class="steps">
-      <div class="step" :class="{ 'is-active': step === 1, 'is-done': step > 1 }" />
-      <div class="step" :class="{ 'is-active': step === 2 }" />
-    </div>
 
     <div v-if="errorMsg" class="alert alert--error">{{ errorMsg }}</div>
     <div v-if="successMsg" class="alert alert--success">{{ successMsg }}</div>
@@ -18,23 +12,33 @@
     <div v-if="loading" class="muted">Carregando...</div>
 
     <template v-else>
-      <section v-if="step === 1">
-        <h2>1. Sobre quem vai ser atendido</h2>
-        <div class="card">
-          <PastoralField v-for="f in stage1Fields" :key="f.id" :field="f" v-model="formData1[f.key]" />
+      <!-- Escolha da etapa -->
+      <section v-if="!stage">
+        <p>Qual etapa você vai preencher agora?</p>
+
+        <div class="card card--clickable hub-card" @click="chooseStage(1)">
+          <strong>Etapa 1 · Pessoa atendida</strong>
+          <div class="muted">Dados de quem vai ser atendido.</div>
         </div>
-        <button class="btn btn--primary" @click="goStep2">Continuar</button>
+
+        <div class="card card--clickable hub-card" @click="chooseStage(2)">
+          <strong>Etapa 2 · Atendimento</strong>
+          <div class="muted">Preenchido por quem realizou o atendimento.</div>
+        </div>
       </section>
 
-      <section v-if="step === 2">
-        <h2>2. Sobre o atendimento</h2>
-        <p class="muted">Preenchido por quem realizou o atendimento.</p>
-        <div class="card">
-          <PastoralField v-for="f in stage2Fields" :key="f.id" :field="f" v-model="formData2[f.key]" />
-        </div>
-        <button class="btn btn--primary" :disabled="submitting" @click="submit">
-          {{ submitting ? "Enviando..." : "Enviar ficha" }}
-        </button>
+      <!-- Formulário da etapa escolhida -->
+      <section v-else>
+        <h2>{{ stage === 1 ? "1. Sobre quem vai ser atendido" : "2. Sobre o atendimento" }}</h2>
+        <div v-if="!currentFields.length" class="empty">Nenhuma pergunta cadastrada nesta etapa.</div>
+        <template v-else>
+          <div class="card">
+            <PastoralField v-for="f in currentFields" :key="f.id" :field="f" v-model="formData[f.key]" />
+          </div>
+          <button class="btn btn--primary" :disabled="submitting" @click="submit">
+            {{ submitting ? "Enviando..." : "Enviar etapa" }}
+          </button>
+        </template>
       </section>
     </template>
   </div>
@@ -44,16 +48,16 @@
 const { call } = useApi();
 
 const loading = ref(true);
-const step = ref(1);
+const stage = ref<number | null>(null);
 const fields = ref<any[]>([]);
-const formData1 = reactive<Record<string, any>>({});
-const formData2 = reactive<Record<string, any>>({});
+const formData = reactive<Record<string, any>>({});
 const submitting = ref(false);
 const errorMsg = ref("");
 const successMsg = ref("");
 
-const stage1Fields = computed(() => fields.value.filter((f) => f.stage === 1).sort((a, b) => a.sort_order - b.sort_order));
-const stage2Fields = computed(() => fields.value.filter((f) => f.stage === 2).sort((a, b) => a.sort_order - b.sort_order));
+const currentFields = computed(() =>
+  fields.value.filter((f) => f.stage === stage.value).sort((a, b) => a.sort_order - b.sort_order)
+);
 
 function defaultValue(type: string) {
   return type === "multi_select" ? [] : "";
@@ -64,67 +68,58 @@ function isEmpty(value: any) {
   return !value || !String(value).trim();
 }
 
-function validate(list: any[], data: Record<string, any>) {
-  for (const f of list) {
-    if (f.required && isEmpty(data[f.key])) {
-      return `Preencha: ${f.label}`;
-    }
-  }
-  return "";
+function resetForm() {
+  Object.keys(formData).forEach((k) => delete formData[k]);
+  for (const f of currentFields.value) formData[f.key] = defaultValue(f.type);
+}
+
+function chooseStage(s: number) {
+  errorMsg.value = "";
+  successMsg.value = "";
+  stage.value = s;
+  resetForm();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function backToChoice() {
+  stage.value = null;
+  errorMsg.value = "";
+  successMsg.value = "";
 }
 
 async function load() {
   loading.value = true;
   try {
-    fields.value = await call("/pastoral-fields");
-    for (const f of fields.value) {
-      const target = f.stage === 1 ? formData1 : formData2;
-      target[f.key] = defaultValue(f.type);
-    }
-  } catch (e: any) {
+    fields.value = (await call("/pastoral-fields")) || [];
+  } catch {
     errorMsg.value = "Não foi possível carregar o formulário.";
   } finally {
     loading.value = false;
   }
 }
 
-function goStep2() {
-  errorMsg.value = "";
-  const err = validate(stage1Fields.value, formData1);
-  if (err) {
-    errorMsg.value = err;
-    return;
-  }
-  step.value = 2;
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
 async function submit() {
   errorMsg.value = "";
-  const err = validate(stage2Fields.value, formData2);
-  if (err) {
-    errorMsg.value = err;
-    return;
+  successMsg.value = "";
+  for (const f of currentFields.value) {
+    if (f.required && isEmpty(formData[f.key])) {
+      errorMsg.value = `Preencha: ${f.label}`;
+      return;
+    }
   }
   submitting.value = true;
   try {
-    const stage1_data = stage1Fields.value.map((f) => ({ key: f.key, label: f.label, type: f.type, value: formData1[f.key] }));
-    const stage2_data = stage2Fields.value.map((f) => ({ key: f.key, label: f.label, type: f.type, value: formData2[f.key] }));
+    const data = currentFields.value.map((f) => ({ key: f.key, label: f.label, type: f.type, value: formData[f.key] }));
+    const attended_name =
+      stage.value === 1 ? formData.nome_completo || "" : formData.pessoa_atendida_nome || "";
+    const attended_by = stage.value === 2 ? formData.atendente_nome || "" : "";
     await call("/pastoral-submissions", {
       method: "POST",
-      body: {
-        attended_name: formData1.nome_completo || "",
-        attended_by: formData2.atendente_nome || "",
-        stage1_data,
-        stage2_data,
-      },
+      body: { stage: stage.value, attended_name, attended_by, data },
     });
-    successMsg.value = "Ficha enviada com sucesso!";
-    step.value = 1;
-    for (const f of fields.value) {
-      const target = f.stage === 1 ? formData1 : formData2;
-      target[f.key] = defaultValue(f.type);
-    }
+    successMsg.value = "Etapa enviada com sucesso!";
+    stage.value = null;
+    window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (e: any) {
     errorMsg.value = e?.data?.error || "Erro ao enviar. Tente novamente.";
   } finally {
