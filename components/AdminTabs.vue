@@ -1,11 +1,14 @@
 <template>
   <div class="admin-tabs">
+    <NuxtLink to="/base" class="btn btn--ghost">← Voltar</NuxtLink>
     <NuxtLink to="/admin" class="btn" :class="isActive('/admin') ? 'btn--primary' : 'btn--ghost'">Painel</NuxtLink>
     <NuxtLink to="/admin/celebrations" class="btn" :class="isActive('/admin/celebrations') ? 'btn--primary' : 'btn--ghost'">Relatórios</NuxtLink>
     <NuxtLink to="/admin/ministries" class="btn" :class="isActive('/admin/ministries') ? 'btn--primary' : 'btn--ghost'">Ministérios</NuxtLink>
     <NuxtLink to="/admin/dashboard" class="btn" :class="isActive('/admin/dashboard') ? 'btn--primary' : 'btn--ghost'">Dashboard</NuxtLink>
     <NuxtLink to="/admin/organograma" class="btn" :class="isActive('/admin/organograma') ? 'btn--primary' : 'btn--ghost'">Organograma</NuxtLink>
     <NuxtLink to="/admin/pastoral" class="btn" :class="isActive('/admin/pastoral') ? 'btn--primary' : 'btn--ghost'">Casa Pastoral</NuxtLink>
+    <NuxtLink to="/admin/servico" class="btn" :class="isActive('/admin/servico') ? 'btn--primary' : 'btn--ghost'">Serviço</NuxtLink>
+    <NuxtLink to="/admin/estoque" class="btn" :class="isActive('/admin/estoque') ? 'btn--primary' : 'btn--ghost'">Estoque</NuxtLink>
   </div>
 </template>
 

@@ -4,6 +4,21 @@
 
     <input v-if="field.type === 'text'" :value="modelValue" @input="onInput(($event.target as HTMLInputElement).value)" type="text" />
 
+    <input
+      v-else-if="field.type === 'number'"
+      :value="modelValue"
+      @input="onInput(Number(($event.target as HTMLInputElement).value))"
+      type="number"
+      min="0"
+    />
+
+    <input
+      v-else-if="field.type === 'date'"
+      :value="modelValue"
+      @input="onInput(($event.target as HTMLInputElement).value)"
+      type="date"
+    />
+
     <textarea
       v-else-if="field.type === 'textarea'"
       :value="modelValue"

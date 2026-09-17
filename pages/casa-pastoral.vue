@@ -1,7 +1,8 @@
 <template>
   <div class="page">
-    <div class="toolbar" v-if="step > 1">
-      <button class="btn btn--ghost" @click="step = step - 1">← Voltar</button>
+    <div class="toolbar">
+      <button v-if="step > 1" class="btn btn--ghost" @click="step = step - 1">← Voltar</button>
+      <NuxtLink v-else to="/base" class="btn btn--ghost">← Voltar</NuxtLink>
     </div>
     <h1>Casa <em>Pastoral</em></h1>
     <p>Relatório de atendimento. Preencha as duas etapas abaixo.</p>
