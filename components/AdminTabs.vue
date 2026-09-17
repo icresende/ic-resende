@@ -5,6 +5,7 @@
     <NuxtLink to="/admin/ministries" class="btn" :class="isActive('/admin/ministries') ? 'btn--primary' : 'btn--ghost'">Ministérios</NuxtLink>
     <NuxtLink to="/admin/dashboard" class="btn" :class="isActive('/admin/dashboard') ? 'btn--primary' : 'btn--ghost'">Dashboard</NuxtLink>
     <NuxtLink to="/admin/organograma" class="btn" :class="isActive('/admin/organograma') ? 'btn--primary' : 'btn--ghost'">Organograma</NuxtLink>
+    <NuxtLink to="/admin/pastoral" class="btn" :class="isActive('/admin/pastoral') ? 'btn--primary' : 'btn--ghost'">Casa Pastoral</NuxtLink>
   </div>
 </template>
 

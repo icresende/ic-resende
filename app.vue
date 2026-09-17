@@ -7,6 +7,7 @@
       </NuxtLink>
       <nav class="topbar__nav">
         <NuxtLink to="/">Responder</NuxtLink>
+        <NuxtLink to="/casa-pastoral">Casa Pastoral</NuxtLink>
         <NuxtLink to="/organograma">Organograma</NuxtLink>
         <NuxtLink to="/admin">Administrador</NuxtLink>
       </nav>

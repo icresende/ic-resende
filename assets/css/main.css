@@ -601,3 +601,59 @@ a { color: var(--green-700); }
 }
 
 
+
+/* ---- Casa Pastoral: opções de rádio/checkbox ---- */
+.pastoral-required { color: #b64444; }
+
+.pastoral-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pastoral-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  cursor: pointer;
+  font-size: 0.94rem;
+  color: var(--ink);
+}
+.pastoral-option input {
+  width: auto;
+  margin-top: 3px;
+  accent-color: var(--green-500);
+}
+.pastoral-option:has(input:checked) {
+  border-color: var(--green-500);
+  background: var(--green-100);
+}
+
+.pastoral-answer {
+  margin-bottom: 14px;
+}
+.pastoral-answer__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--green-900);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+.pastoral-answer__value {
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+.pastoral-type-tag {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-left: 8px;
+}
